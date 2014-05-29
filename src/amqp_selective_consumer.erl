@@ -97,12 +97,17 @@ handle_consume(#'basic.consume'{consumer_tag = Tag,
                      ok
              end,
     case {Result, NoWait} of
-        {ok, true} ->
-            {ok, State#state
-                   {consumers = dict:store(Tag, Pid, Consumers),
-                    monitors  = add_to_monitor_dict(Pid, Monitors)}};
-        {ok, false} ->
-            {ok, State#state{unassigned = Pid}};
+        {ok, _} ->
+            case is_binary(Tag) andalso size(Tag) >= 0 of
+                true ->
+                    {ok, State#state
+                           {consumers = dict:store(Tag, Pid, Consumers),
+                            monitors  = add_to_monitor_dict(Pid, Monitors)}};
+                false ->
+                    {ok, State#state{unassigned = Pid}}
+            end;
+        %{ok, false} ->
+        %    {ok, State#state{unassigned = Pid}};
         {Err, true} ->
             {error, Err, State};
         {_Err, false} ->
@@ -123,7 +128,9 @@ handle_consume_ok(BasicConsumeOk, _BasicConsume,
           monitors   = add_to_monitor_dict(Pid, Monitors),
           unassigned = undefined},
     deliver(BasicConsumeOk, State1),
-    {ok, State1}.
+    {ok, State1};
+handle_consume_ok(_BasicConsumeOk, _BasicConsume, State) ->
+    {ok, State}.
 
 %% @private
 %% We sent a basic.cancel.
