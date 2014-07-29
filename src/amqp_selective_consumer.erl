@@ -181,7 +181,9 @@ handle_info({'DOWN', _MRef, process, Pid, _Info},
             {ok, State#state{monitors = dict:erase(Pid, Monitors),
                              consumers =
                                  dict:filter(
-                                   fun (_, Pid1) when Pid1 =:= Pid -> false;
+                                   fun (CTag, Pid1) when Pid1 =:= Pid ->
+										   cancel_deliver_manual(CTag),
+										   false;
                                        (_, _)                      -> true
                                    end, Consumers)}};
         error ->
@@ -218,7 +220,14 @@ deliver_to_consumer_or_die(Method, Msg, State) ->
     case resolve_consumer(tag(Method), State) of
         {consumer, Pid} -> Pid ! Msg;
         {default, Pid}  -> Pid ! Msg;
-        error           -> exit(unexpected_delivery_and_no_default_consumer)
+        error           ->
+            case Msg of
+                #'basic.deliver'{consumer_tag = CTag} ->
+                    cancel_deliver_manual(CTag);
+                Other ->
+                    ok
+            end,
+            error_logger:error_msg("unexpected_delivery_and_no_default_consumer:~n~p", [Msg])
     end.
 
 deliver(Method, State) ->
@@ -274,4 +283,13 @@ remove_from_monitor_dict(Pid, Monitors) ->
         {1, MRef}     -> erlang:demonitor(MRef),
                          dict:erase(Pid, Monitors);
         {Count, MRef} -> dict:store(Pid, {Count - 1, MRef}, Monitors)
+    end.
+
+cancel_deliver_manual(CTag) ->
+    case get(channel_pid) of
+        undefined ->
+			error_logger:error_msg("Failed ChPid undefined", []);
+        ChPid ->
+			error_logger:error_msg("ChPid ~p,CTag ~p manual_cancel ok", [ChPid, CTag]),
+            amqp_channel:cast(ChPid, #'basic.cancel'{consumer_tag = CTag})
     end.

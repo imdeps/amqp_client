@@ -31,7 +31,7 @@
 
 -behaviour(gen_server2).
 
--export([start_link/3, call_consumer/2, call_consumer/3, call_consumer/4]).
+-export([start_link/3, call_consumer/2, call_consumer/3, call_consumer/4, set_channel_pid/2]).
 -export([behaviour_info/1]).
 -export([init/1, terminate/2, code_change/3, handle_call/3, handle_cast/2,
          handle_info/2, prioritise_info/3]).
@@ -73,6 +73,9 @@ call_consumer(Pid, Method, Args) ->
 
 call_consumer(Pid, Method, Args, DeliveryCtx) ->
     gen_server2:call(Pid, {consumer_call, Method, Args, DeliveryCtx}, infinity).
+
+set_channel_pid(Pid, ChannelPid) ->
+	gen_server2:call(Pid, {set_channel_pid, ChannelPid}).
 
 %%---------------------------------------------------------------------------
 %% Behaviour
@@ -272,7 +275,11 @@ handle_call({consumer_call, Method = #'basic.deliver'{}, Args, DeliveryCtx}, _Fr
             State = #state{module       = ConsumerModule,
                            module_state = MState}) ->
     Return = ConsumerModule:handle_deliver(Method, Args, DeliveryCtx, MState),
-    consumer_call_reply(Return, State).
+    consumer_call_reply(Return, State);
+
+handle_call({set_channel_pid, ChannelPid}, _From, State) ->
+	put(channel_pid, ChannelPid),
+	{reply, ok, State}.
 
 handle_cast(_What, State) ->
     {noreply, State}.

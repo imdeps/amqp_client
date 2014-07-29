@@ -40,6 +40,7 @@ start_link(Type, Connection, ConnName, InfraArgs, ChNumber,
                           intrinsic, ?MAX_WAIT, worker, [amqp_channel]}),
     Writer = start_writer(Sup, Type, InfraArgs, ConnName, ChNumber, ChPid),
     amqp_channel:set_writer(ChPid, Writer),
+	amqp_gen_consumer:set_channel_pid(ConsumerPid, ChPid),
     {ok, AState} = init_command_assembler(Type),
     {ok, Sup, {ChPid, AState}}.
 
