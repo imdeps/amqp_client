@@ -140,7 +140,7 @@
 %% @spec (Channel, Method) -> Result
 %% @doc This is equivalent to amqp_channel:call(Channel, Method, none).
 call(Channel, Method) ->
-    gen_server:call(Channel, {call, Method, none, self()}, infinity).
+    gen_server:call(Channel, {call, Method, none, self()}).
 
 %% @spec (Channel, Method, Content) -> Result
 %% where
@@ -163,7 +163,7 @@ call(Channel, Method) ->
 %% the broker. It does not necessarily imply that the broker has
 %% accepted responsibility for the message.
 call(Channel, Method, Content) ->
-    gen_server:call(Channel, {call, Method, Content, self()}, infinity).
+    gen_server:call(Channel, {call, Method, Content, self()}).
 
 %% @spec (Channel, Method) -> ok
 %% @doc This is equivalent to amqp_channel:cast(Channel, Method, none).
@@ -208,7 +208,7 @@ close(Channel) ->
 %% @doc Closes the channel, allowing the caller to supply a reply code and
 %% text. If the channel is already closing, the atom 'closing' is returned.
 close(Channel, Code, Text) ->
-    gen_server:call(Channel, {close, Code, Text}, infinity).
+    gen_server:call(Channel, {close, Code, Text}).
 
 %% @spec (Channel) -> integer()
 %% where
@@ -328,7 +328,7 @@ unregister_flow_handler(Channel) ->
 %% where Consumer is the amqp_gen_consumer implementation registered with
 %% the channel.
 call_consumer(Channel, Msg) ->
-    gen_server:call(Channel, {call_consumer, Msg}, infinity).
+    gen_server:call(Channel, {call_consumer, Msg}).
 
 %% @spec (Channel, BasicConsume, Subscriber) -> ok
 %% where
@@ -338,7 +338,7 @@ call_consumer(Channel, Msg) ->
 %% @doc Subscribe the given pid to a queue using the specified
 %% basic.consume method.
 subscribe(Channel, BasicConsume = #'basic.consume'{}, Subscriber) ->
-    gen_server:call(Channel, {subscribe, BasicConsume, Subscriber}, infinity).
+    gen_server:call(Channel, {subscribe, BasicConsume, Subscriber}).
 
 %%---------------------------------------------------------------------------
 %% Internal interface
@@ -364,7 +364,7 @@ connection_closing(Pid, ChannelCloseType, Reason) ->
 
 %% @private
 open(Pid) ->
-    gen_server:call(Pid, open, infinity).
+    gen_server:call(Pid, open).
 
 %%---------------------------------------------------------------------------
 %% gen_server callbacks
