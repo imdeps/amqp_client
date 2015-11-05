@@ -224,7 +224,7 @@ deliver_to_consumer_or_die(Method, Msg, State) ->
             case Msg of
                 #'basic.deliver'{consumer_tag = CTag} ->
                     cancel_deliver_manual(CTag);
-                Other ->
+                _Other ->
                     ok
             end,
             error_logger:error_msg("unexpected_delivery_and_no_default_consumer:~n~p", [Msg])
