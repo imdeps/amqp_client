@@ -63,6 +63,8 @@ handle_message(socket_closing_timeout,
 handle_message(socket_closed, State = #state{waiting_socket_close = true,
                                              closing_reason = Reason}) ->
     {stop, {shutdown, Reason}, State};
+handle_message({'EXIT', _Pid, shutdown}, State) ->
+    {stop, {shutdown, node_shutdown}, State};
 handle_message(socket_closed, State = #state{waiting_socket_close = false}) ->
     {stop, socket_closed_unexpectedly, State};
 handle_message({socket_error, _} = SocketError, State) ->
